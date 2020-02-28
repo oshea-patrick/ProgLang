@@ -16,6 +16,7 @@ import android.widget.ProgressBar
 import android.widget.Toast
 
 import com.example.proglang.R
+import com.example.proglang.data.SpotTest
 
 class LoginActivity : AppCompatActivity() {
 
@@ -30,6 +31,9 @@ class LoginActivity : AppCompatActivity() {
         val password = findViewById<EditText>(R.id.password)
         val login = findViewById<Button>(R.id.login)
         val loading = findViewById<ProgressBar>(R.id.loading)
+
+        // Test I added in
+        //SpotTest.testMethod();
 
         loginViewModel = ViewModelProviders.of(this, LoginViewModelFactory())
                 .get(LoginViewModel::class.java)
