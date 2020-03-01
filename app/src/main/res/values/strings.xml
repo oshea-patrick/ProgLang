@@ -9,4 +9,9 @@
     <string name="invalid_username">Not a valid username</string>
     <string name="invalid_password">Password must be >5 characters</string>
     <string name="login_failed">"Login failed"</string>
+    <string name="enter_your_pairing_code">Enter your pairing code</string>
+    <string name="pair_code">Pair Code</string>
+    <string name="enter">Enter</string>
+    <string name="login">Login</string>
+    <string name="enterpaircode">EnterPairCode</string>
 </resources>
