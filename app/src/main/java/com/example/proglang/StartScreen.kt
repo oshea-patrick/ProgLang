@@ -20,10 +20,7 @@ class StartScreen : AppCompatActivity() {
 
 
         toLoginButtonvVal.setOnClickListener {
-
             startActivity(Intent(this, LoginActivity::class.java))
-
-
         }
 
         pairButton.setOnClickListener{
