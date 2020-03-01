@@ -16,7 +16,7 @@ import android.widget.ProgressBar
 import android.widget.Toast
 
 import com.example.proglang.R
-import com.example.proglang.data.SpotTest
+//import com.example.proglang.data.SpotTest
 
 class LoginActivity : AppCompatActivity() {
 
@@ -24,7 +24,6 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContentView(R.layout.activity_login)
 
         val username = findViewById<EditText>(R.id.username)
