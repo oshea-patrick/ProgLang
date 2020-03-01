@@ -16,7 +16,7 @@ import android.widget.ProgressBar
 import android.widget.Toast
 
 import com.example.proglang.R
-import com.example.proglang.data.SpotTest
+//import com.example.proglang.data.SpotTest
 
 class LoginActivity : AppCompatActivity() {
 
