@@ -58,7 +58,7 @@ dependencies {
 
     // TODO: should we use newer Version 2.8.5 is avliable
 
-    implementation "com.google.code.gson:gson:2.6.1"
+    implementation "com.google.code.gson:gson:2.8.5"
     implementation group: 'com.adamratzman', name: 'spotify-api-kotlin', version: '3.0.01'
     implementation 'com.android.support:multidex:1.0.3'
 
