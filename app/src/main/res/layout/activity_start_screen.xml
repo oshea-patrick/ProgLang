@@ -7,8 +7,7 @@
     tools:context=".ui.login.StartScreen">
 
     <EditText
-        android:hint="@string/enterpaircode"
-        android:id="@+id/paircode"
+        android:id="@+id/SongId"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="99dp"
@@ -18,16 +17,16 @@
         android:layout_marginRight="99dp"
         android:layout_marginBottom="33dp"
         android:ems="10"
+        android:hint="spotify:track:xxxxxxxxxx"
         android:importantForAutofill="no"
         android:inputType="textPersonName"
-        android:text="@string/pair_code"
-        app:layout_constraintBottom_toTopOf="@+id/pair"
+        app:layout_constraintBottom_toTopOf="@+id/playButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/paircodetext" />
 
     <Button
-        android:id="@+id/pair"
+        android:id="@+id/playButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="161dp"
@@ -36,11 +35,11 @@
         android:layout_marginEnd="162dp"
         android:layout_marginRight="162dp"
         android:layout_marginBottom="235dp"
-        android:text="@string/enter"
+        android:text="Add To Queue"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/paircode" />
+        app:layout_constraintTop_toBottomOf="@+id/SongId" />
 
     <TextView
         android:id="@+id/paircodetext"
@@ -52,26 +51,11 @@
         android:layout_marginEnd="76dp"
         android:layout_marginRight="76dp"
         android:layout_marginBottom="94dp"
-        android:text="@string/enter_your_pairing_code"
+        android:text="Enter A Song ID"
         android:textSize="24sp"
-        app:layout_constraintBottom_toTopOf="@+id/paircode"
+        app:layout_constraintBottom_toTopOf="@+id/SongId"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/login"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="162dp"
-        android:layout_marginLeft="162dp"
-        android:layout_marginTop="129dp"
-        android:layout_marginEnd="161dp"
-        android:layout_marginRight="161dp"
-        android:layout_marginBottom="30dp"
-        android:text="@string/login"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pair" />
 </androidx.constraintlayout.widget.ConstraintLayout>

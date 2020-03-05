@@ -5,8 +5,12 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.EditText
 import android.widget.Toast
+import com.adamratzman.spotify.SpotifyApi
 import com.example.proglang.R
+import com.example.proglang.Songs.Queue
+import com.example.proglang.Songs.Song
 import com.example.proglang.api.SpotTest
 
 import com.spotify.android.appremote.api.ConnectionParams;
@@ -17,43 +21,69 @@ import com.spotify.protocol.client.Subscription;
 import com.spotify.protocol.types.PlayerState;
 import com.spotify.protocol.types.Track;
 
+import org.jetbrains.exposed.dao.*
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.transaction
+
 class StartScreen : AppCompatActivity() {
 
     private val clientId = "f0593fe09a274cdb9ace5c6f31959336"
     private val redirectUri = "http://com.example.proglang/callback"
     private var spotifyAppRemote: SpotifyAppRemote? = null
+    val connectionParams = ConnectionParams.Builder(clientId)
+        .setRedirectUri(redirectUri)
+        .showAuthView(true)
+        .build()
+    var songQueue : Queue = Queue()
+    private var trackWasStarted = false
+
+
+    object Songs : Table() {
+        val URI = varchar("URI", 48)
+        val user = varchar("user", 45)
+        val numVotes = integer("numVotes")
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_start_screen)
 
-        val toLoginButtonVal = findViewById<Button>(R.id.login)
-        val pairButton  = findViewById<Button>(R.id.pair)
+        val playButton  = findViewById<Button>(R.id.playButton)
+        val textField :EditText = findViewById<EditText>(R.id.SongId)
 
-
-        toLoginButtonVal.setOnClickListener {
-            SpotTest.testMethod();
-        }
-
-        pairButton.setOnClickListener{
+        playButton.setOnClickListener{
 
             Toast.makeText(
                 applicationContext,
-                "Pairing",
+                "Added to Queue",
                 Toast.LENGTH_LONG
             ).show()
+
+            var tempSong : Song = Song(textField.text.toString(), "", 1)
+            songQueue.push(tempSong)
+            textField.text.clear()
+
         }
 
+        //Database.connect("jdbc:mysql://54.70.127.148/data_collection", driver = "com.mysql.jdbc.Driver", user = "root", password = "Tanman99!newerererer")
 
+        /*transaction {
+
+            SchemaUtils.create (Songs)
+
+            val songURI = Songs.insert {
+                it[URI] = "St. Petersburg"
+                it[user] = "Pat"
+                it[numVotes] = 1
+            }
+        } */
 
     }
 
     override fun onStart() {
         super.onStart()
-            val connectionParams = ConnectionParams.Builder(clientId)
-                .setRedirectUri(redirectUri)
-                .showAuthView(true)
-                .build()
+
             SpotifyAppRemote.connect(this, connectionParams, object : Connector.ConnectionListener {
                 override fun onConnected(appRemote: SpotifyAppRemote) {
                     spotifyAppRemote = appRemote
@@ -67,16 +97,57 @@ class StartScreen : AppCompatActivity() {
                     // Something went wrong when attempting to connect! Handle errors here
                 }
             })
+
+        /*val api = SpotifyApi.spotifyAppApi(
+            ("f0593fe09a274cdb9ace5c6f31959336"),
+            ("0f8ae7ff05574cad8a1f8ee4cc4e7cbd")
+        ).build()
+
+        val track = api.search.searchTrack("I love college").complete().joinToString { it.uri.toString() } */
     }
 
     private fun connected() {
         // Then we will write some more code here.
-        spotifyAppRemote?.playerApi?.play("spotify:playlist:37i9dQZF1EpksPLJebg5Ao")
+        val songURI = "spotify:track:1sFstGV1Z3Aw5TDFCiT7vK"
+        spotifyAppRemote?.playerApi?.play(songURI)
+        // Subscribe to PlayerState
+        spotifyAppRemote?.playerApi?.subscribeToPlayerState()?.setEventCallback {
+            handleTrackEnded(it)
+        }
     }
 
     override fun onStop() {
         super.onStop()
-        // Aaand we will finish off here.
+        super.onStop()
+        spotifyAppRemote?.let {
+            SpotifyAppRemote.disconnect(it)
+        }
+    }
+
+    private fun handleTrackEnded(playerState: PlayerState) {
+        setTrackWasStarted(playerState)
+
+        val isPaused = playerState.isPaused
+        val position = playerState.playbackPosition
+        val hasEnded = trackWasStarted && isPaused && position == 0L
+
+        if (hasEnded) {
+            trackWasStarted = false
+            var tempSong : Song? = songQueue.pop()
+            if (tempSong != null){
+                spotifyAppRemote?.playerApi?.play(tempSong.URI)
+            }
+        }
+    }
+
+    private fun setTrackWasStarted(playerState: PlayerState) {
+        val position = playerState.playbackPosition
+        val duration = playerState.track.duration
+        val isPlaying = !playerState.isPaused
+
+        if (!trackWasStarted && position > 0 && duration > 0 && isPlaying) {
+            trackWasStarted = true
+        }
     }
 
 
