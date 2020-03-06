@@ -1,5 +1,4 @@
 package com.example.proglang.ui.login
-
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -7,11 +6,10 @@ import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
-import com.adamratzman.spotify.SpotifyApi
+import com.adamratzman.spotify.*
 import com.example.proglang.R
 import com.example.proglang.Songs.Queue
 import com.example.proglang.Songs.Song
-import com.example.proglang.api.SpotTest
 
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
@@ -27,6 +25,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 class StartScreen : AppCompatActivity() {
 
+    // Connection data for API
     private val clientId = "f0593fe09a274cdb9ace5c6f31959336"
     private val redirectUri = "http://com.example.proglang/callback"
     private var spotifyAppRemote: SpotifyAppRemote? = null
@@ -34,8 +33,11 @@ class StartScreen : AppCompatActivity() {
         .setRedirectUri(redirectUri)
         .showAuthView(true)
         .build()
+
+    // Data for Queue
     var songQueue : Queue = Queue()
     private var trackWasStarted = false
+    var songOnQueue : Boolean = false
 
 
     object Songs : Table() {
@@ -52,8 +54,9 @@ class StartScreen : AppCompatActivity() {
         val playButton  = findViewById<Button>(R.id.playButton)
         val textField :EditText = findViewById<EditText>(R.id.SongId)
 
-        playButton.setOnClickListener{
 
+        // What to do when you add to queue
+        playButton.setOnClickListener{
             Toast.makeText(
                 applicationContext,
                 "Added to Queue",
@@ -64,19 +67,35 @@ class StartScreen : AppCompatActivity() {
             songQueue.push(tempSong)
             textField.text.clear()
 
+            // Check and see if a song is queued up next
+            if (!songOnQueue) {
+                spotifyAppRemote?.playerApi?.queue(songQueue?.pop()?.URI)
+                songOnQueue = true
+
+            }
+
         }
 
-        //Database.connect("jdbc:mysql://54.70.127.148/data_collection", driver = "com.mysql.jdbc.Driver", user = "root", password = "Tanman99!newerererer")
+       /* try {
+            Database.connect(
+                "jdbc:mysql://34.214.102.61:3306/data_collection",
+                driver = "com.mysql.jdbc.Driver",
+                user = "root",
+                password = "proglang"
+            )
 
-        /*transaction {
+            transaction {
 
-            SchemaUtils.create (Songs)
+                SchemaUtils.create(Songs)
 
-            val songURI = Songs.insert {
-                it[URI] = "St. Petersburg"
-                it[user] = "Pat"
-                it[numVotes] = 1
+                val songURI = Songs.insert {
+                    it[URI] = "St. Petersburg"
+                    it[user] = "Pat"
+                    it[numVotes] = 1
+                }
             }
+        } catch (e : Exception) {
+            Log.d("error", e.message)
         } */
 
     }
@@ -108,7 +127,8 @@ class StartScreen : AppCompatActivity() {
 
     private fun connected() {
         // Then we will write some more code here.
-        val songURI = "spotify:track:1sFstGV1Z3Aw5TDFCiT7vK"
+        val songURI = "spotify:track:1sFstGV1Z3Aw5TDFCiT7vK" //Favorite Song
+
         spotifyAppRemote?.playerApi?.play(songURI)
         // Subscribe to PlayerState
         spotifyAppRemote?.playerApi?.subscribeToPlayerState()?.setEventCallback {
@@ -134,8 +154,15 @@ class StartScreen : AppCompatActivity() {
         if (hasEnded) {
             trackWasStarted = false
             var tempSong : Song? = songQueue.pop()
+
             if (tempSong != null){
-                spotifyAppRemote?.playerApi?.play(tempSong.URI)
+                spotifyAppRemote?.playerApi?.skipNext()
+                spotifyAppRemote?.playerApi?.queue(tempSong?.URI)
+                songOnQueue = true
+            }
+            else {
+                spotifyAppRemote?.playerApi?.skipNext()
+                songOnQueue = false
             }
         }
     }

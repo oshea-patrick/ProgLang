@@ -55,11 +55,12 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation project(':spotify-app-remote-release-0.7.0')
+    implementation 'com.android.volley:volley:1.1.1'
 
     // TODO: should we use newer Version 2.8.5 is avliable
 
     implementation "com.google.code.gson:gson:2.8.5"
-    implementation group: 'com.adamratzman', name: 'spotify-api-kotlin', version: '3.0.01'
+    implementation 'com.github.adamint:spotify-web-api-kotlin:dev-SNAPSHOT'
     implementation 'com.android.support:multidex:1.0.3'
     implementation 'org.jetbrains.exposed:exposed:0.10.2'
     implementation group: 'mysql', name: 'mysql-connector-java', version: '5.1.36'
@@ -71,4 +72,6 @@ repositories {
     maven {
         url  "https://dl.bintray.com/kotlin/exposed"
     }
+    maven { url 'https://jitpack.io' }
+    jcenter()
 }
