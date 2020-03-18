@@ -1,27 +1,23 @@
 package com.example.proglang.ui.login
+
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
-import com.adamratzman.spotify.*
+import androidx.appcompat.app.AppCompatActivity
 import com.example.proglang.R
 import com.example.proglang.Songs.Queue
 import com.example.proglang.Songs.Song
+import com.example.proglang.songQueueActivity
+import com.spotify.android.appremote.api.ConnectionParams
+import com.spotify.android.appremote.api.Connector
+import com.spotify.android.appremote.api.SpotifyAppRemote
+import com.spotify.protocol.types.PlayerState
+import org.jetbrains.exposed.sql.Table
 
-import com.spotify.android.appremote.api.ConnectionParams;
-import com.spotify.android.appremote.api.Connector;
-import com.spotify.android.appremote.api.SpotifyAppRemote;
 
-import com.spotify.protocol.client.Subscription;
-import com.spotify.protocol.types.PlayerState;
-import com.spotify.protocol.types.Track;
-
-import org.jetbrains.exposed.dao.*
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.transaction
 
 class StartScreen : AppCompatActivity() {
 
@@ -53,6 +49,14 @@ class StartScreen : AppCompatActivity() {
 
         val playButton  = findViewById<Button>(R.id.playButton)
         val textField :EditText = findViewById<EditText>(R.id.SongId)
+        val toSongQueueButton =  findViewById<Button>(R.id.toSongQueueButton)
+
+
+        toSongQueueButton.setOnClickListener{
+
+            val myIntent = Intent(this, songQueueActivity::class.java)
+            startActivity(myIntent)
+        }
 
 
         // What to do when you add to queue
