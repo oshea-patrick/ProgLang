@@ -67,10 +67,8 @@ dependencies {
     implementation project(':spotify-app-remote-release-0.7.0')
     implementation 'com.android.volley:volley:1.1.1'
 
-    // TODO: should we use newer Version 2.8.5 is avliable
-
     implementation "com.google.code.gson:gson:2.8.5"
-    implementation 'com.github.adamint:spotify-web-api-kotlin:dev-SNAPSHOT'
+    implementation group: 'com.adamratzman', name: 'spotify-api-kotlin', version: '3.0.02'
     implementation 'com.android.support:multidex:1.0.3'
     implementation 'org.jetbrains.exposed:exposed:0.10.2'
     implementation group: 'mysql', name: 'mysql-connector-java', version: '5.1.36'

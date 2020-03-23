@@ -9,8 +9,11 @@ import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.ListView
 import android.widget.TextView
+import com.example.proglang.global.globals
 
 class songQueueActivity : AppCompatActivity() {
+
+    var songQueue = globals.songQueue
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,14 +28,21 @@ class songQueueActivity : AppCompatActivity() {
     private class adapterForSongQueue(context: Context): BaseAdapter() {
 
         private val mContext: Context
+        var songQueue = globals.songQueue
 
-        private val names = arrayListOf<String>(
-            "Pat", "Brendan", "Aaron"
-        )
+        private var names = mutableListOf<String>()
 
 
         init {
             mContext = context
+
+            if (globals.nextSong != null) {
+                names.add(names.size, globals.nextSong?.getName() + " by " + globals.nextSong?.getArtist());
+            }
+
+            for (song in songQueue.queue.orEmpty()) {
+                names.add(names.size, song.getName() + " by " + song.getArtist());
+            }
         }
 
         override fun getCount(): Int {
