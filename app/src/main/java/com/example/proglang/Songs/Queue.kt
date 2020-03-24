@@ -21,10 +21,31 @@ class Queue constructor(){
             return null
         else {
             val temp = queue?.first()
-            Log.d("Song", "Popped song")
             queue?.removeAt(0)
             size--
             return temp
+        }
+    }
+
+    fun peek() : Song?{
+        if (size == 0)
+            return null
+        else {
+            val temp = queue?.first()
+            return temp
+        }
+    }
+
+    // push without sorting
+    fun add(input : Song) {
+        if (size == 0 && notInitialized) {
+            notInitialized = false
+            queue = mutableListOf<Song>(input)
+            size++
+        }
+        else {
+            queue?.add(size, input)
+            size++
         }
     }
 
@@ -32,17 +53,21 @@ class Queue constructor(){
         if (size == 0 && notInitialized) {
             notInitialized = false
             queue = mutableListOf<Song>(input)
-            Log.d("Song", "Pushed song, size was zero")
             size++
         }
         else {
             queue?.add(size, input)
             size++
-            Log.d("Song", "Pushed song")
         }
 
         sortList()
 
+    }
+
+    fun printQ() {
+        queue?.forEach {
+            Log.d("Q", it.URI)
+        }
     }
 
 

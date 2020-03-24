@@ -22,4 +22,8 @@ class Song constructor(var URI : String, var user : String, var numVotes : Int){
         return api.tracks.getTrack(URI).complete()!!.artists[0].name.toString();
     }
 
+    override fun toString():String {
+        return URI + " " + user + " " + numVotes
+    }
+
 }

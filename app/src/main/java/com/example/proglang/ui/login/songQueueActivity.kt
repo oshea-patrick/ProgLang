@@ -1,4 +1,4 @@
-package com.example.proglang
+package com.example.proglang.ui.login
 
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.ListView
 import android.widget.TextView
+import com.example.proglang.R
 import com.example.proglang.global.globals
 
 class songQueueActivity : AppCompatActivity() {
@@ -22,7 +23,10 @@ class songQueueActivity : AppCompatActivity() {
 
         val listView = findViewById<ListView>(R.id.songQueueListView)
 
-        listView.adapter = adapterForSongQueue(this)
+        listView.adapter =
+            adapterForSongQueue(
+                this
+            )
     }
 
     private class adapterForSongQueue(context: Context): BaseAdapter() {
@@ -40,7 +44,7 @@ class songQueueActivity : AppCompatActivity() {
                 names.add(names.size, globals.nextSong?.getName() + " by " + globals.nextSong?.getArtist());
             }
 
-            for (song in songQueue.queue.orEmpty()) {
+            for (song in songQueue?.queue.orEmpty()) {
                 names.add(names.size, song.getName() + " by " + song.getArtist());
             }
         }
