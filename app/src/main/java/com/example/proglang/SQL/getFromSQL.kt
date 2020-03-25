@@ -4,6 +4,7 @@ import android.os.AsyncTask
 import android.util.Log
 import com.example.proglang.Songs.Queue
 import com.example.proglang.Songs.Song
+import com.example.proglang.global.globals
 import java.sql.DriverManager
 import java.sql.ResultSetMetaData
 
@@ -25,7 +26,7 @@ public class getFromSQL :
         super.onPreExecute()
     }
     override fun onPostExecute(result: String) {
-        Log.d("Result Printing", result)
+        cancel(true);
     }
 
     private fun parseResult(a : String) : String {
@@ -63,13 +64,22 @@ public class getFromSQL :
                         """.trimIndent()
                 var tempSong = Song(tempURI, tempUser, (parseResult(tempNumVotes).toInt()))
                 queue?.add(tempSong)
-                Log.d("Q", tempSong.toString())
+                Log.d("Q But in Get Method", tempSong.toString())
             }
             queue?.sortList()
+            con.close()
         } catch (e: Exception) {
             e.printStackTrace()
             res = e.toString()
         }
+        globals.songQueue = queue
+
+        // DO logic for songInQueue and nextSong
+        globals.nextSong = queue?.peek()
+        globals.spotifyAppRemote?.playerApi?.queue(queue?.peek()?.URI)
+
+
+        Log.d("Leaving get method", "Leaving")
         return ""
     }
 }

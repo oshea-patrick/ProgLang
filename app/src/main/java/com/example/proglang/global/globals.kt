@@ -1,5 +1,6 @@
 package com.example.proglang.global
 
+import android.util.Log
 import com.adamratzman.spotify.SpotifyApi
 import com.example.proglang.SQL.getFromSQL
 import com.example.proglang.Songs.Queue
@@ -7,10 +8,12 @@ import com.example.proglang.Songs.Song
 import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import postToSQL
+import java.lang.Exception
 
 object globals {
 
     var instantiated = false;
+    var firstPress = true;
     var songQueue : Queue? = Queue()
     val api = SpotifyApi.spotifyAppApi(
         ("f0593fe09a274cdb9ace5c6f31959336"),
@@ -31,19 +34,43 @@ object globals {
     var post = postToSQL()
 
     fun postToSQLServer(uri : String, user : String, numVotes : Int) {
-        post.update(uri, user, numVotes)
-        post.execute("")
+        try {
+            post.update(uri, user, numVotes)
+            post.execute("")
+        } catch (e : Exception) {
+            Log.d("Post Crashed", e.message)
+        }
+        post = postToSQL()
     }
 
     fun removeFromSQLServer(uri : String?, user : String) {
-        post.update(uri, user, -999)
-        post.execute("")
+        try {
+            post.update(uri, user, -999)
+            post.execute("")
+        } catch (e : Exception) {
+            Log.d("Remove Crashed", e.message)
+        }
+        post = postToSQL()
     }
 
     fun getFromSQLServer() {
-        get.update(globals.roomCode)
-        get.execute("")
-        globals.songQueue = get.queue
+        try {
+            get.update(globals.roomCode)
+            get.execute("")
+        } catch (e : Exception) {
+            Log.d("Get Crashed", e.message)
+        }
+    get = getFromSQL()
+    }
+
+    fun parseString(a : String) :String {
+        var out = ""
+        for (char in a) {
+            if (char != ' ' && char != '\n') {
+                out += char
+            }
+        }
+        return out
     }
 
 }

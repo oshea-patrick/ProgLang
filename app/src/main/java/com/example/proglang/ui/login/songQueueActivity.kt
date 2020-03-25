@@ -3,6 +3,7 @@ package com.example.proglang.ui.login
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,10 +12,32 @@ import android.widget.ListView
 import android.widget.TextView
 import com.example.proglang.R
 import com.example.proglang.global.globals
+import com.spotify.android.appremote.api.Connector
+import com.spotify.android.appremote.api.SpotifyAppRemote
 
 class songQueueActivity : AppCompatActivity() {
 
-    var songQueue = globals.songQueue
+    fun reConnect() {
+        try {
+            SpotifyAppRemote.connect(
+                this,
+                globals.connectionParams,
+                object : Connector.ConnectionListener {
+                    override fun onConnected(appRemote: SpotifyAppRemote) {
+                        globals.spotifyAppRemote = appRemote
+                        Log.d("MainActivity", "Connected! Yay!")
+                    }
+
+                    override fun onFailure(throwable: Throwable) {
+                        Log.e("MainActivity", throwable.message, throwable)
+                    }
+                })
+        } catch (e : Exception) {
+            Log.d("Main", "Failed")
+            reConnect()
+        }
+
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,6 +45,8 @@ class songQueueActivity : AppCompatActivity() {
 
 
         val listView = findViewById<ListView>(R.id.songQueueListView)
+
+        reConnect()
 
         listView.adapter =
             adapterForSongQueue(
@@ -40,12 +65,8 @@ class songQueueActivity : AppCompatActivity() {
         init {
             mContext = context
 
-            if (globals.nextSong != null) {
-                names.add(names.size, globals.nextSong?.getName() + " by " + globals.nextSong?.getArtist());
-            }
-
             for (song in songQueue?.queue.orEmpty()) {
-                names.add(names.size, song.getName() + " by " + song.getArtist());
+                names.add(names.size, song.name + " by " + song.artist);
             }
         }
 

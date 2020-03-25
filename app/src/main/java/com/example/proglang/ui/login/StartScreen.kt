@@ -2,6 +2,7 @@ package com.example.proglang.ui.login
 
 import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
@@ -17,6 +18,7 @@ import com.spotify.android.appremote.api.SpotifyAppRemote
 import com.spotify.protocol.types.PlayerState
 import com.spotify.protocol.types.Track
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.exposed.sql.Table
 import postToSQL
@@ -27,10 +29,6 @@ class StartScreen : AppCompatActivity() {
     // Connection data for API
 
     // Data for Queue
-    var songQueue = globals.songQueue
-    private var trackWasStarted = false
-    var songOnQueue : Boolean = false
-    var spotifyAppRemote = globals.spotifyAppRemote
     var get = globals.get
     var post = globals.post
 
@@ -38,12 +36,28 @@ class StartScreen : AppCompatActivity() {
     var playButton  : Button? = null
     var textField : EditText? = null
     var toSongQueueButton : Button? = null
+    var startButton : Button? = null
 
+    fun reConnect() {
+        try {
+            SpotifyAppRemote.connect(
+                this,
+                globals.connectionParams,
+                object : Connector.ConnectionListener {
+                    override fun onConnected(appRemote: SpotifyAppRemote) {
+                        globals.spotifyAppRemote = appRemote
+                        Log.d("MainActivity", "Connected! Yay!")
+                    }
 
-    object Songs : Table() {
-        val URI = varchar("URI", 45)
-        val user = varchar("user", 45)
-        val numVotes = integer("numVotes")
+                    override fun onFailure(throwable: Throwable) {
+                        Log.e("MainActivity", throwable.message, throwable)
+                    }
+                })
+        } catch (e : Exception) {
+            Log.d("Main", "Failed")
+            reConnect()
+        }
+
     }
 
 
@@ -51,20 +65,74 @@ class StartScreen : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_start_screen)
 
+        // get access to componenets on screen
         roomCodeButton = findViewById<TextView>(R.id.roomCode)
         playButton  = findViewById<Button>(R.id.playButton)
         textField = findViewById<EditText>(R.id.SongId)
         toSongQueueButton =  findViewById<Button>(R.id.toSongQueueButton)
+        startButton  = findViewById<Button>(R.id.startButton)
 
+        // update text for screen
         roomCodeButton?.text = globals.roomCode
 
-
+        // button listeners
         toSongQueueButton?.setOnClickListener{
 
             val myIntent = Intent(this, songQueueActivity::class.java)
             startActivity(myIntent)
         }
 
+        startButton?.setOnClickListener{
+
+            reConnect()
+
+            if (globals.started) {
+                globals.spotifyAppRemote?.playerApi?.pause()
+                globals.started = false
+                startButton?.text = "Play"
+            }
+            // start-up
+            else if (!globals.started && globals.firstPress) {
+                //globals.getFromSQLServer()
+                var firstSong = globals.songQueue?.peek()
+                if (firstSong != null) {
+                    globals.currentSong =firstSong
+                    //Log.d("T", firstSong?.name)
+                    //Log.d("T", "-"+firstSong?.URI+"-")
+                    globals.spotifyAppRemote?.playerApi?.play(firstSong?.URI)
+
+                    globals.started = true
+                    startButton?.text = "Pause"
+                    globals.firstPress = false
+
+
+                    SpotifyAppRemote.connect(
+                        this,
+                        globals.connectionParams,
+                        object : Connector.ConnectionListener {
+                            override fun onConnected(appRemote: SpotifyAppRemote) {
+                                globals.spotifyAppRemote = appRemote
+                                Log.d("MainActivity", "Connected! Yay!")
+                                // Now you can start interacting with App Remote
+                                connected()
+                            }
+
+                            override fun onFailure(throwable: Throwable) {
+                                Log.e("MainActivity", throwable.message, throwable)
+                                // Something went wrong when attempting to connect! Handle errors here
+                            }
+                        })
+
+                    globals.removeFromSQLServer(firstSong.URI, globals.roomCode)
+
+                }
+            }
+            else if (!globals.started && !globals.firstPress) {
+                globals.spotifyAppRemote?.playerApi?.resume()
+                globals.started = true
+                startButton?.text = "Pause"
+            }
+        }
 
         // What to do when you add to queue
         playButton?.setOnClickListener{
@@ -74,28 +142,15 @@ class StartScreen : AppCompatActivity() {
                 Toast.LENGTH_LONG
             ).show()
 
-            var tempSong : Song = Song(textField?.text.toString(), "", 1)
+            reConnect()
 
-            globals.postToSQLServer(textField?.text.toString(), globals.roomCode, 1)
+            if (!textField?.text.toString().equals("")) {
+                globals.spotifyAppRemote?.playerApi?.queue(textField?.text.toString())
+                globals.postToSQLServer(textField?.text.toString(), globals.roomCode, 1)
+                globals.getFromSQLServer()
 
-            GlobalScope.launch {
-                suspend {
-                    globals.getFromSQLServer()
-                }.invoke()
+                textField?.text?.clear()
             }
-
-            textField?.text?.clear()
-
-
-
-            // Check and see if a song is queued up next
-            if (!songOnQueue) {
-                globals.nextSong = songQueue?.peek();
-                spotifyAppRemote?.playerApi?.queue(globals.nextSong?.URI)
-                songOnQueue = true
-            }
-
-
         }
     }
 
@@ -105,92 +160,69 @@ class StartScreen : AppCompatActivity() {
             globals.roomCode = UUID.randomUUID().toString().subSequence(0,8).toString()
             // Maybe move this somewhere else later
             roomCodeButton?.text = globals.roomCode
-            SpotifyAppRemote.connect(
-                this,
-                globals.connectionParams,
-                object : Connector.ConnectionListener {
-                    override fun onConnected(appRemote: SpotifyAppRemote) {
-                        spotifyAppRemote = appRemote
-                        Log.d("MainActivity", "Connected! Yay!")
-                        // Now you can start interacting with App Remote
-                        connected()
-                    }
 
-                    override fun onFailure(throwable: Throwable) {
-                        Log.e("MainActivity", throwable.message, throwable)
-                        // Something went wrong when attempting to connect! Handle errors here
-                    }
-                })
+            globals.spotifyAppRemote?.playerApi?.subscribeToPlayerState()?.setEventCallback {
+
+            }
 
             // val track = api.search.searchTrack("I love college").complete().joinToString { it.uri.toString() }
-        }
-        else {
-            spotifyAppRemote?.playerApi?.subscribeToPlayerState()?.setEventCallback {
-                handleTrackEnded(it)
-            }
         }
     }
 
     private fun connected() {
+
+
             // Then we will write some more code here.
-            val songURI = "spotify:track:1sFstGV1Z3Aw5TDFCiT7vK" //Favorite Song
             globals.instantiated = true;
-            spotifyAppRemote?.playerApi?.play(songURI)
             // Subscribe to PlayerState
-            spotifyAppRemote?.playerApi?.subscribeToPlayerState()?.setEventCallback {
+            globals.spotifyAppRemote?.playerApi?.subscribeToPlayerState()?.setEventCallback {
                 val track: Track = it.track
-                globals.currentSong = Song(track.uri, globals.roomCode, 1)
-                handleTrackEnded(it)
+                GlobalScope.launch {
+                    handleEvents(it)
+                }
             }
     }
 
     override fun onStop() {
         super.onStop()
         super.onStop()
-        spotifyAppRemote?.let {
+        globals.spotifyAppRemote?.let {
             SpotifyAppRemote.disconnect(it)
         }
     }
 
 
     // if song ends and for some reason nothing plays
-    private fun handleTrackEnded(playerState: PlayerState) {
-        setTrackWasStarted(playerState)
-        spotifyAppRemote?.playerApi?.subscribeToPlayerState()?.setEventCallback {
-            val track: Track = it.track
-            var tempSong = Song(track.uri, globals.roomCode, 1)
+    suspend fun handleEvents(playerState: PlayerState) {
+        while (true) {
+            var stallTime = 10000L
+            globals.spotifyAppRemote?.playerApi?.subscribeToPlayerState()?.setEventCallback {
+                val track: Track = it.track
+                var playingSong = Song(track.uri, globals.roomCode, 1)
 
-            if (!tempSong.URI.equals(globals.currentSong?.URI)) {
-                // remove current song from database
-                globals.removeFromSQLServer(globals.currentSong?.URI, globals.roomCode)
+                if (!playingSong.URI.equals(globals.currentSong?.URI)) {
 
-                // download database
-                GlobalScope.launch {
-                    suspend {
-                        globals.getFromSQLServer()
-                    }.invoke()
+                    // remove current song from database
+                    globals.removeFromSQLServer(globals.currentSong?.URI, globals.roomCode)
+
+                    // make sure that the song that was supposed to be up next is the one playing
+                    while (playingSong.URI != globals.nextSong?.URI) {
+                        reConnect()
+                        globals.spotifyAppRemote?.playerApi?.skipNext()
+                        val track: Track = it.track
+                        playingSong.URI = track.uri
+                    }
+
+                    // download database and update nextSong
+                    globals.getFromSQLServer()
+
+                    // update current song
+                    globals.currentSong = playingSong
                 }
-
-                // update current song
-                globals.currentSong = tempSong
-
-                // update next song
-                globals.nextSong = songQueue?.peek()
-
+                stallTime = track.duration - it.playbackPosition + 1000
             }
 
-            handleTrackEnded(it)
-        }
-
-    }
-
-    private fun setTrackWasStarted(playerState: PlayerState) {
-        val position = playerState.playbackPosition
-        val duration = playerState.track.duration
-        val isPlaying = !playerState.isPaused
-
-        if (!trackWasStarted && position > 0 && duration > 0 && isPlaying) {
-            trackWasStarted = true
+            delay(stallTime)
         }
     }
 

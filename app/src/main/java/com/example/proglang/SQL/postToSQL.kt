@@ -25,7 +25,7 @@ public class postToSQL :
     }
 
     override fun onPostExecute(result: String) {
-        Log.d("Result Printing", result)
+        cancel(true);
     }
     override fun doInBackground(vararg param1: String?): String {
         try {
@@ -61,6 +61,7 @@ public class postToSQL :
         } catch (e: java.lang.Exception) {
             Log.d("Got an exception!", e.message)
         }
+        Log.d("Leaving Post", "Leaving")
         return res
     }
 }
