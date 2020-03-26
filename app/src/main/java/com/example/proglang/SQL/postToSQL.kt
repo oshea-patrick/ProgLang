@@ -13,15 +13,17 @@ public class postToSQL :
     var URI : String? = null
     var usr :String? = null
     var numVotes : Int = 0
+    var code = 0
 
     override fun onPreExecute() {
         super.onPreExecute()
     }
 
-    fun update(a : String?, b : String? , c : Int) {
+    fun update(a: String?, b: String?, c: Int, d: Int) {
         URI = a;
         usr = b;
         numVotes = c;
+        code = d;
     }
 
     override fun onPostExecute(result: String) {
@@ -33,7 +35,7 @@ public class postToSQL :
             val conn = DriverManager.getConnection(url, user, pass)
 
             // create a sql date object so we can use it in our INSERT statement
-            if (numVotes != -999) {
+            if (code == 0) {
                 // the mysql insert statement
                 val query =
                     (" insert into Table1 (URI, user, numVotes)"
@@ -47,10 +49,20 @@ public class postToSQL :
                 // execute the preparedstatement
                 preparedStmt.execute()
                 conn.close()
-            }
-            else {
+            } else if (code == 1) {
+                // the mysql insert statement
                 val query =
-                    (" delete from Table1 where URI='" + URI + "' and user='" + usr + "'")
+                    (" update Table1 set column3 = " + numVotes + " where (column1 = '" + URI + "' and column2 = '" + usr + "')")
+
+                // create the mysql insert preparedstatement
+                val preparedStmt: PreparedStatement = conn.prepareStatement(query)
+                // execute the preparedstatement
+                preparedStmt.execute()
+                conn.close()
+            } else {
+                Log.d("Deleteing", "Deleting " + URI + " " + usr)
+                val query =
+                    (" delete from Table1 where (URI='" + URI + "' and user='" + usr + "')")
 
                 // create the mysql insert preparedstatement
                 val preparedStmt: PreparedStatement = conn.prepareStatement(query)

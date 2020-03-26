@@ -64,10 +64,10 @@ public class getFromSQL :
                         """.trimIndent()
                 var tempSong = Song(tempURI, tempUser, (parseResult(tempNumVotes).toInt()))
                 queue?.add(tempSong)
-                Log.d("Q But in Get Method", tempSong.toString())
             }
             queue?.sortList()
             con.close()
+            queue?.printQ()
         } catch (e: Exception) {
             e.printStackTrace()
             res = e.toString()
@@ -75,8 +75,10 @@ public class getFromSQL :
         globals.songQueue = queue
 
         // DO logic for songInQueue and nextSong
-        globals.nextSong = queue?.peek()
-        globals.spotifyAppRemote?.playerApi?.queue(queue?.peek()?.URI)
+        if (!globals.nextSong?.URI.equals(queue?.peek()?.URI)) {
+            globals.nextSong = queue?.peek()
+            globals.spotifyAppRemote?.playerApi?.queue(queue?.peek()?.URI)
+        }
 
 
         Log.d("Leaving get method", "Leaving")

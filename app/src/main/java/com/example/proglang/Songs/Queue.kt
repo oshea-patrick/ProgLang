@@ -1,7 +1,6 @@
 package com.example.proglang.Songs
 
 import android.util.Log
-import java.util.*
 
 class Queue constructor(){
     var size : Int = 0
@@ -13,7 +12,17 @@ class Queue constructor(){
     }
 
     fun sortList() {
-        queue?.sortedByDescending { Song -> Song.numVotes }
+        val lessSize = size - 1
+        for (range in 0..lessSize) {
+            var big = range;
+            for (range2 in range..lessSize) {
+                if (queue?.get(big)?.numVotes!! < queue?.get(range2)?.numVotes!!)
+                    big = range2
+            }
+            var temp = queue?.get(range!!)
+            queue?.set(range, queue?.get(big)!!)
+            queue?.set(big, temp!!)
+        }
     }
 
     fun pop() : Song?{

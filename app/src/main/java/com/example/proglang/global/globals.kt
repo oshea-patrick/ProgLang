@@ -8,12 +8,19 @@ import com.example.proglang.Songs.Song
 import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import postToSQL
-import java.lang.Exception
 
 object globals {
 
+    // refers to page
     var instantiated = false;
+
+    // refers to play
     var firstPress = true;
+
+    // refers to playing
+    var started = false
+
+
     var songQueue : Queue? = Queue()
     val api = SpotifyApi.spotifyAppApi(
         ("f0593fe09a274cdb9ace5c6f31959336"),
@@ -28,14 +35,15 @@ object globals {
         .setRedirectUri(redirectUri)
         .showAuthView(true)
         .build()
-    var started = false
     var roomCode = ""
     var get = getFromSQL()
     var post = postToSQL()
+    var testCount = 1
 
     fun postToSQLServer(uri : String, user : String, numVotes : Int) {
         try {
-            post.update(uri, user, numVotes)
+            post.update(uri, user, testCount, 0)
+            testCount++
             post.execute("")
         } catch (e : Exception) {
             Log.d("Post Crashed", e.message)
@@ -43,9 +51,19 @@ object globals {
         post = postToSQL()
     }
 
+    fun updateSQL(uri: String?, user: String, numVotes: Int) {
+        try {
+            post.update(uri, user, numVotes, 1)
+            post.execute("")
+        } catch (e: Exception) {
+            Log.d("Post Crashed", e.message)
+        }
+        post = postToSQL()
+    }
+
     fun removeFromSQLServer(uri : String?, user : String) {
         try {
-            post.update(uri, user, -999)
+            post.update(uri, user, -1, 2)
             post.execute("")
         } catch (e : Exception) {
             Log.d("Remove Crashed", e.message)

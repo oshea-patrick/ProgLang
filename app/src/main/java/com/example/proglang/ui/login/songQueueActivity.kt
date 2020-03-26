@@ -1,15 +1,16 @@
 package com.example.proglang.ui.login
 
 import android.content.Context
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
+import android.widget.Button
 import android.widget.ListView
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import com.example.proglang.R
 import com.example.proglang.global.globals
 import com.spotify.android.appremote.api.Connector
@@ -43,7 +44,6 @@ class songQueueActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_song_queue)
 
-
         val listView = findViewById<ListView>(R.id.songQueueListView)
 
         reConnect()
@@ -57,16 +57,16 @@ class songQueueActivity : AppCompatActivity() {
     private class adapterForSongQueue(context: Context): BaseAdapter() {
 
         private val mContext: Context
-        var songQueue = globals.songQueue
 
         private var names = mutableListOf<String>()
-
+        private var numSongs = mutableListOf<Int>()
 
         init {
             mContext = context
 
-            for (song in songQueue?.queue.orEmpty()) {
+            for (song in globals.songQueue?.queue.orEmpty()) {
                 names.add(names.size, song.name + " by " + song.artist);
+                numSongs.add(numSongs.size, song.numVotes)
             }
         }
 
@@ -93,8 +93,24 @@ class songQueueActivity : AppCompatActivity() {
             nameTextView.text = names.get(position)
 
             val positionTextView = row.findViewById<TextView>(R.id.positionTextView)
+            var rowSong = globals.songQueue?.queue?.get(position)
 
-            positionTextView.text = "Song Number: $position"
+            positionTextView.text = "Votes: " + numSongs.get(position)
+
+            val button = row.findViewById<Button>(R.id.button)
+
+            button.setOnClickListener {
+                // Update label
+                if (rowSong != null) {
+                    globals.updateSQL(rowSong?.URI, globals.roomCode, (1 + rowSong?.numVotes!!))
+                }
+                // update queue
+                globals.getFromSQLServer()
+                // redraw activity
+                rowSong = globals.songQueue?.queue?.get(position)
+                positionTextView.text = "Votes: " + numSongs.get(position)
+            }
+
 
             return row
 

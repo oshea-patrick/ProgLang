@@ -2,7 +2,6 @@ package com.example.proglang.ui.login
 
 import android.content.Intent
 import android.os.Bundle
-import android.provider.Settings
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
@@ -10,18 +9,13 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.proglang.R
-import com.example.proglang.SQL.getFromSQL
 import com.example.proglang.Songs.Song
 import com.example.proglang.global.globals
 import com.spotify.android.appremote.api.Connector
 import com.spotify.android.appremote.api.SpotifyAppRemote
-import com.spotify.protocol.types.PlayerState
 import com.spotify.protocol.types.Track
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.jetbrains.exposed.sql.Table
-import postToSQL
 import java.util.*
 
 
@@ -97,8 +91,6 @@ class StartScreen : AppCompatActivity() {
                 var firstSong = globals.songQueue?.peek()
                 if (firstSong != null) {
                     globals.currentSong =firstSong
-                    //Log.d("T", firstSong?.name)
-                    //Log.d("T", "-"+firstSong?.URI+"-")
                     globals.spotifyAppRemote?.playerApi?.play(firstSong?.URI)
 
                     globals.started = true
@@ -145,9 +137,14 @@ class StartScreen : AppCompatActivity() {
             reConnect()
 
             if (!textField?.text.toString().equals("")) {
+                if (globals.currentSong != null && globals.nextSong == null) {
+                    globals.nextSong = Song(textField?.text.toString(), globals.roomCode, 1)
+                }
+
                 globals.spotifyAppRemote?.playerApi?.queue(textField?.text.toString())
                 globals.postToSQLServer(textField?.text.toString(), globals.roomCode, 1)
                 globals.getFromSQLServer()
+
 
                 textField?.text?.clear()
             }
@@ -167,20 +164,13 @@ class StartScreen : AppCompatActivity() {
 
             // val track = api.search.searchTrack("I love college").complete().joinToString { it.uri.toString() }
         }
+        globals.instantiated = true;
     }
 
     private fun connected() {
-
-
-            // Then we will write some more code here.
-            globals.instantiated = true;
-            // Subscribe to PlayerState
-            globals.spotifyAppRemote?.playerApi?.subscribeToPlayerState()?.setEventCallback {
-                val track: Track = it.track
                 GlobalScope.launch {
-                    handleEvents(it)
+                    handleEvents()
                 }
-            }
     }
 
     override fun onStop() {
@@ -193,36 +183,52 @@ class StartScreen : AppCompatActivity() {
 
 
     // if song ends and for some reason nothing plays
-    suspend fun handleEvents(playerState: PlayerState) {
+    suspend fun handleEvents() {
         while (true) {
             var stallTime = 10000L
             globals.spotifyAppRemote?.playerApi?.subscribeToPlayerState()?.setEventCallback {
                 val track: Track = it.track
-                var playingSong = Song(track.uri, globals.roomCode, 1)
+                var playingSong = track.uri
 
-                if (!playingSong.URI.equals(globals.currentSong?.URI)) {
+                if (!playingSong.equals(globals.currentSong?.URI)) {
 
                     // remove current song from database
                     globals.removeFromSQLServer(globals.currentSong?.URI, globals.roomCode)
 
                     // make sure that the song that was supposed to be up next is the one playing
-                    while (playingSong.URI != globals.nextSong?.URI) {
+
+                    if (!playingSong.equals(globals.nextSong?.URI)) {
                         reConnect()
-                        globals.spotifyAppRemote?.playerApi?.skipNext()
-                        val track: Track = it.track
-                        playingSong.URI = track.uri
+                        globals.spotifyAppRemote?.playerApi?.play(globals.nextSong?.URI)
+                        globals.currentSong = globals.nextSong
+                        globals.nextSong = null
+                        globals.removeFromSQLServer(globals.currentSong?.URI, globals.roomCode)
                     }
+
+
+                    // download database and update nextSong
+                    globals.getFromSQLServer()
+                }
+
+                // Song finished no autoplay
+                else if (playingSong.equals(globals.currentSong?.URI) && (it.playbackPosition == it.track.duration || it.playbackPosition == 0L)) {
+                    globals.removeFromSQLServer(globals.currentSong?.URI, globals.roomCode)
+                    reConnect()
+                    globals.spotifyAppRemote?.playerApi?.play(globals.nextSong?.URI)
+                    globals.currentSong = globals.nextSong
+                    globals.nextSong = null
+                    globals.removeFromSQLServer(globals.currentSong?.URI, globals.roomCode)
 
                     // download database and update nextSong
                     globals.getFromSQLServer()
 
-                    // update current song
-                    globals.currentSong = playingSong
                 }
+
+
                 stallTime = track.duration - it.playbackPosition + 1000
             }
 
-            delay(stallTime)
+            //delay(stallTime)
         }
     }
 
