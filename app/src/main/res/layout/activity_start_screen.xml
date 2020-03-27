@@ -4,11 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".StartScreen">
+    tools:context=".ui.login.StartScreen">
 
     <EditText
-        android:hint="@string/enterpaircode"
-        android:id="@+id/paircode"
+        android:id="@+id/SongId"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="99dp"
@@ -18,16 +17,16 @@
         android:layout_marginRight="99dp"
         android:layout_marginBottom="33dp"
         android:ems="10"
+        android:hint="spotify:track:xxxxxxxxxx"
         android:importantForAutofill="no"
         android:inputType="textPersonName"
-        android:text="@string/pair_code"
-        app:layout_constraintBottom_toTopOf="@+id/pair"
+        app:layout_constraintBottom_toTopOf="@+id/playButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/paircodetext" />
+        app:layout_constraintTop_toBottomOf="@+id/roomCode" />
 
     <Button
-        android:id="@+id/pair"
+        android:id="@+id/playButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="161dp"
@@ -36,14 +35,14 @@
         android:layout_marginEnd="162dp"
         android:layout_marginRight="162dp"
         android:layout_marginBottom="235dp"
-        android:text="@string/enter"
+        android:text="Add To Queue"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/paircode" />
+        app:layout_constraintTop_toBottomOf="@+id/SongId" />
 
     <TextView
-        android:id="@+id/paircodetext"
+        android:id="@+id/roomCode"
         android:layout_width="259dp"
         android:layout_height="48dp"
         android:layout_marginStart="76dp"
@@ -52,26 +51,39 @@
         android:layout_marginEnd="76dp"
         android:layout_marginRight="76dp"
         android:layout_marginBottom="94dp"
-        android:text="@string/enter_your_pairing_code"
-        android:textSize="24sp"
-        app:layout_constraintBottom_toTopOf="@+id/paircode"
+        android:textSize="36sp"
+        app:layout_constraintBottom_toTopOf="@+id/SongId"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/login"
+        android:id="@+id/toSongQueueButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="162dp"
-        android:layout_marginLeft="162dp"
-        android:layout_marginTop="129dp"
-        android:layout_marginEnd="161dp"
-        android:layout_marginRight="161dp"
-        android:layout_marginBottom="30dp"
-        android:text="@string/login"
+        android:layout_marginStart="163dp"
+        android:layout_marginLeft="163dp"
+        android:layout_marginTop="90dp"
+        android:layout_marginEnd="142dp"
+        android:layout_marginRight="142dp"
+        android:layout_marginBottom="73dp"
+        android:text="@string/title_activity_song_queue"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pair" />
+        app:layout_constraintTop_toBottomOf="@+id/playButton"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <Button
+        android:id="@+id/startButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="156dp"
+        android:text="Start"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
