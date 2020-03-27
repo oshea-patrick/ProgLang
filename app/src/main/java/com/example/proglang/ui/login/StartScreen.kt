@@ -302,9 +302,7 @@ class StartScreen : AppCompatActivity() {
 
                 stallTime = track.duration - it.playbackPosition + 3000
             }
-        globals.spotifyAppRemote?.playerApi?.subscribeToPlayerState()?.cancel()
         delay(stallTime)
-        handleEvents()
     }
 
 
