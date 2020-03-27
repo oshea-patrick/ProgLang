@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="100dp">
 
     <TextView
         android:id="@+id/TitleTextView"
@@ -20,19 +20,19 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/positionTextView"
+        android:id="@+id/voteTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="@string/SongArtisit"
+        android:text="@string/votecount"
         app:layout_constraintStart_toStartOf="@+id/TitleTextView"
         app:layout_constraintTop_toBottomOf="@+id/TitleTextView" />
 
     <Button
-        android:id="@+id/button"
-        android:layout_width="48dp"
-        android:layout_height="36dp"
-        android:text="Button"
+        android:id="@+id/btn_up_vote"
+        android:layout_width="110dp"
+        android:layout_height="39dp"
+        android:text="@string/vote_up"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

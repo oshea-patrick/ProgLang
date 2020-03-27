@@ -71,8 +71,8 @@ class StartScreen : AppCompatActivity() {
 
         // button listeners
         toSongQueueButton?.setOnClickListener{
-
-            val myIntent = Intent(this, songQueueActivity::class.java)
+// i changed this should now lauch to recycler
+            val myIntent = Intent(this, recyclerSongQueue::class.java)
             startActivity(myIntent)
         }
 
