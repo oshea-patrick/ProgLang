@@ -52,7 +52,7 @@ public class postToSQL :
             } else if (code == 1) {
                 // the mysql insert statement
                 val query =
-                    (" update Table1 set column3 = " + numVotes + " where (column1 = '" + URI + "' and column2 = '" + usr + "')")
+                    (" update Table1 set numVotes = " + numVotes + " where (URI = '" + URI + "' and user = '" + usr + "')")
 
                 // create the mysql insert preparedstatement
                 val preparedStmt: PreparedStatement = conn.prepareStatement(query)

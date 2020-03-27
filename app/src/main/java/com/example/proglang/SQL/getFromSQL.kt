@@ -73,14 +73,12 @@ public class getFromSQL :
             res = e.toString()
         }
         globals.songQueue = queue
-
         // DO logic for songInQueue and nextSong
         if (!globals.nextSong?.URI.equals(queue?.peek()?.URI)) {
             globals.nextSong = queue?.peek()
-            globals.spotifyAppRemote?.playerApi?.queue(queue?.peek()?.URI)
         }
 
-
+        globals.sqlDone = true
         Log.d("Leaving get method", "Leaving")
         return ""
     }

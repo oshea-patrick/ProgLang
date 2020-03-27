@@ -38,12 +38,11 @@ object globals {
     var roomCode = ""
     var get = getFromSQL()
     var post = postToSQL()
-    var testCount = 1
+    var sqlDone = true
 
     fun postToSQLServer(uri : String, user : String, numVotes : Int) {
         try {
-            post.update(uri, user, testCount, 0)
-            testCount++
+            post.update(uri, user, 1, 0)
             post.execute("")
         } catch (e : Exception) {
             Log.d("Post Crashed", e.message)
@@ -62,13 +61,15 @@ object globals {
     }
 
     fun removeFromSQLServer(uri : String?, user : String) {
-        try {
-            post.update(uri, user, -1, 2)
-            post.execute("")
-        } catch (e : Exception) {
-            Log.d("Remove Crashed", e.message)
+        if (uri != null) {
+            try {
+                post.update(uri, user, -1, 2)
+                post.execute("")
+            } catch (e: Exception) {
+                Log.d("Remove Crashed", e.message)
+            }
+            post = postToSQL()
         }
-        post = postToSQL()
     }
 
     fun getFromSQLServer() {
