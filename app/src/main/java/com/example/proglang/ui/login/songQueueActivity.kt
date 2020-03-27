@@ -92,7 +92,7 @@ class songQueueActivity : AppCompatActivity() {
             val nameTextView = row.findViewById<TextView>(R.id.TitleTextView)
             nameTextView.text = names.get(position)
 
-            val positionTextView = row.findViewById<TextView>(R.id.positionTextView)
+            val positionTextView = row.findViewById<TextView>(R.id.voteTextView)
 
             positionTextView.text = "Song Number: $position"
 
