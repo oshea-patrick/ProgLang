@@ -32,6 +32,7 @@ class StartScreen : AppCompatActivity() {
     var textField : EditText? = null
     var toSongQueueButton : Button? = null
     var startButton : Button? = null
+    var toSearchButton: Button? = null
 
     fun reConnect() {
         try {
@@ -88,11 +89,19 @@ class StartScreen : AppCompatActivity() {
         textField = findViewById<EditText>(R.id.SongId)
         toSongQueueButton =  findViewById<Button>(R.id.toSongQueueButton)
         startButton  = findViewById<Button>(R.id.startButton)
+        toSearchButton = findViewById<Button>(R.id.searchButton)
 
         // update text for screen
         roomCodeButton?.text = globals.roomCode
 
         // button listeners
+
+        toSearchButton?.setOnClickListener {
+            val myIntent = Intent(this, song_search_view::class.java)
+            startActivity(myIntent)
+        }
+
+
         toSongQueueButton?.setOnClickListener{
 
             val myIntent = Intent(this, songQueueActivity::class.java)
@@ -194,8 +203,6 @@ class StartScreen : AppCompatActivity() {
             globals.spotifyAppRemote?.playerApi?.subscribeToPlayerState()?.setEventCallback {
 
             }
-
-            // val track = api.search.searchTrack("I love college").complete().joinToString { it.uri.toString() }
         }
         globals.instantiated = true;
     }

@@ -39,6 +39,7 @@ object globals {
     var get = getFromSQL()
     var post = postToSQL()
     var sqlDone = true
+    var searchList = mutableListOf<Song>()
 
     fun postToSQLServer(uri : String, user : String, numVotes : Int) {
         try {
