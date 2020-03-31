@@ -3,20 +3,15 @@ package com.example.proglang.ui.login
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.proglang.R
-import com.example.proglang.Songs.Song
 import com.example.proglang.global.globals
 import com.spotify.android.appremote.api.Connector
 import com.spotify.android.appremote.api.SpotifyAppRemote
-import com.spotify.protocol.types.Track
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.util.*
 
 
@@ -28,11 +23,10 @@ class StartScreen : AppCompatActivity() {
     var post = globals.post
 
     var roomCodeButton : TextView? = null
-    var playButton  : Button? = null
-    var textField : EditText? = null
     var toSongQueueButton : Button? = null
     var startButton : Button? = null
     var toSearchButton: Button? = null
+    var currentRoom: EditText? = null
 
     fun reConnect() {
         try {
@@ -73,7 +67,7 @@ class StartScreen : AppCompatActivity() {
                     }
                 })
         } catch (e: Exception) {
-            Log.d("Main", "Failed")
+            Log.d("Main", "Failed Playing Song")
             reConnect()
         }
     }
@@ -85,20 +79,29 @@ class StartScreen : AppCompatActivity() {
 
         // get access to componenets on screen
         roomCodeButton = findViewById<TextView>(R.id.roomCode)
-        playButton  = findViewById<Button>(R.id.playButton)
-        textField = findViewById<EditText>(R.id.SongId)
         toSongQueueButton =  findViewById<Button>(R.id.toSongQueueButton)
         startButton  = findViewById<Button>(R.id.startButton)
         toSearchButton = findViewById<Button>(R.id.searchButton)
+        currentRoom = findViewById<EditText>(R.id.curRoom)
 
         // update text for screen
         roomCodeButton?.text = globals.roomCode
+        currentRoom?.setText(globals.currentRoom)
 
         // button listeners
 
         toSearchButton?.setOnClickListener {
             val myIntent = Intent(this, song_search_view::class.java)
             startActivity(myIntent)
+        }
+
+        currentRoom?.setOnEditorActionListener { v, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                globals.currentRoom = "" + currentRoom?.text
+                true
+            } else {
+                false
+            }
         }
 
 
@@ -108,7 +111,7 @@ class StartScreen : AppCompatActivity() {
 
             // make sure new data is retrieved
             globals.sqlDone = false
-            globals.getFromSQLServer()
+            globals.getFromSQLServer(globals.currentRoom)
             while (!globals.sqlDone) {
             }
 
@@ -126,9 +129,16 @@ class StartScreen : AppCompatActivity() {
             }
             // start-up
             else if (!globals.started && globals.firstPress) {
+
+                globals.sqlDone = false
+                globals.getFromSQLServer(globals.roomCode)
+                while (!globals.sqlDone) {
+                }
+
                 var firstSong = globals.songQueue?.peek()
                 if (firstSong != null) {
                     globals.currentSong =firstSong
+                    reConnect()
                     globals.spotifyAppRemote?.playerApi?.play(firstSong?.URI)
 
                     globals.started = true
@@ -163,34 +173,6 @@ class StartScreen : AppCompatActivity() {
                 startButton?.text = "Pause"
             }
         }
-
-        // What to do when you add to queue
-        playButton?.setOnClickListener{
-            Toast.makeText(
-                applicationContext,
-                "Added to Queue",
-                Toast.LENGTH_LONG
-            ).show()
-
-            reConnect()
-
-            if (!textField?.text.toString().equals("")) {
-                if (globals.currentSong != null && globals.nextSong == null) {
-                    globals.nextSong = Song(textField?.text.toString(), globals.roomCode, 1)
-                }
-
-                globals.postToSQLServer(textField?.text.toString(), globals.roomCode, 1)
-
-                // make sure new data is retrieved
-                globals.sqlDone = false
-                globals.getFromSQLServer()
-                while (!globals.sqlDone) {
-                }
-
-
-                textField?.text?.clear()
-            }
-        }
     }
 
     override fun onStart() {
@@ -199,18 +181,36 @@ class StartScreen : AppCompatActivity() {
             globals.roomCode = UUID.randomUUID().toString().subSequence(0,8).toString()
             // Maybe move this somewhere else later
             roomCodeButton?.text = globals.roomCode
-
-            globals.spotifyAppRemote?.playerApi?.subscribeToPlayerState()?.setEventCallback {
-
-            }
+            globals.currentRoom = globals.roomCode
+            currentRoom?.setText(globals.roomCode)
         }
         globals.instantiated = true;
     }
 
     private fun connected() {
-                GlobalScope.launch {
-                    handleEvents()
-                }
+
+
+        globals.spotifyAppRemote?.playerApi?.subscribeToPlayerState()?.setEventCallback {
+            var track = it.track
+
+            var numTimes = 0
+            while (!globals.currentSong?.URI.equals(track.uri)) {
+                track = it.track
+                numTimes++
+                if (numTimes >= 500)
+                    break
+            }
+        }
+        // disconnect listener
+        SpotifyAppRemote.disconnect(globals.spotifyAppRemote)
+        reConnect()
+
+        globals.mainHandler.post(object : Runnable {
+            override fun run() {
+                handleEvents()
+                globals.mainHandler.postDelayed(this, 5000)
+            }
+        })
     }
 
     override fun onStop() {
@@ -222,94 +222,71 @@ class StartScreen : AppCompatActivity() {
     }
 
 
-    // if song ends and for some reason nothing plays
-    suspend fun handleEvents() {
-        var stallTime = 10000L
+    fun handleEvents() {
+        globals.numThreads++
+        Log.d("Num Threads", "" + globals.numThreads)
 
-            globals.spotifyAppRemote?.playerApi?.subscribeToPlayerState()?.setEventCallback {
+        globals.getFromSQLServer(globals.roomCode)
 
-                Log.d("Test", "--------------")
-                var track: Track = it.track
-                var playingSong = Song(track.uri, globals.roomCode, 0)
+        globals.spotifyAppRemote?.playerApi?.subscribeToPlayerState()?.setEventCallback {
 
-                // download database and update nextSong
-                globals.sqlDone = false
-                globals.getFromSQLServer()
-                while (!globals.sqlDone) {
+            // get currently playing song
+            var currentlyPlaying = it.track.uri
+
+            // if the incorrect song
+            if (!currentlyPlaying.equals(globals.currentSong?.URI) || (it.playbackPosition == 0L)) {
+
+                if (globals.currentSong == null && globals.nextSong == null) {
+                    globals.spotifyAppRemote?.playerApi?.pause()
+                    startButton?.text = "Play"
+                    globals.started = false
+                    globals.firstPress = true
                 }
 
-                if (!playingSong.URI.equals(globals.currentSong?.URI)) {
 
-                    // make sure that the song that was supposed to be up next is the one playing
-                    // possible fix
-                    if (!playingSong.URI.equals(globals.nextSong?.URI)) {
-                        globals.spotifyAppRemote?.playerApi?.subscribeToPlayerState()
-                        track = it.track
-                        playingSong = Song(track.uri, globals.roomCode, 0)
+                if (!currentlyPlaying.equals(globals.nextSong?.URI)) {
 
 
-                        // second check in case
-                        if (!playingSong.URI.equals(globals.currentSong?.URI)) {
-                            Log.d("Debug", "Playing Song still does not equal current song")
-                            // remove current song from database
-                            globals.removeFromSQLServer(globals.currentSong?.URI, globals.roomCode)
-                            // maybe a fix for nextSong to make sure a nextSong exists
-                            globals.getFromSQLServer()
-                            while (!globals.sqlDone) {
+                    // fix the songs
+                    if (globals.nextSong != null) {
+                        globals.currentSong = globals.nextSong
+                    } else {
+                        Log.d("Next Null", "Null")
+                    }
+
+                    // play the song
+                    playSong("" + globals.currentSong?.URI)
+
+                    //Log.d("Currently playing", currentlyPlaying)
+                    //Log.d("Should be", globals.currentSong?.URI)
+
+
+                    // make sure it plays
+                    var numRun = 0
+                    globals.spotifyAppRemote?.playerApi?.subscribeToPlayerState()
+                        ?.setEventCallback {
+                            while (!it.track.uri.equals(globals.currentSong?.URI)) {
+                                numRun++
+                                if (numRun >= 500)
+                                    break
                             }
-
-
-                            // playSong not working???
-
-                            playSong(globals.nextSong?.URI!!)
-
-                            while (!playingSong.URI.equals(globals.nextSong?.URI)) {
-                                track = it.track
-                                playingSong.URI = track.uri
-                            }
-
-                            // CurrentSong = nextSong
-                            globals.currentSong = globals.nextSong
-                            // NextSong will be queued up
-                            globals.nextSong = null
-                            // Remove it from server as it is playing
-                            globals.removeFromSQLServer(globals.currentSong?.URI, globals.roomCode)
-                        }
                     }
 
-
-                    // download database and update nextSong
-                    globals.sqlDone = false
-                    globals.getFromSQLServer()
-                    while (!globals.sqlDone) {
-                    }
-                }
-
-                // Song finished no autoplay
-                else if (playingSong.URI.equals(globals.currentSong?.URI) && (it.playbackPosition == it.track.duration || it.isPaused)) {
-                    globals.removeFromSQLServer(globals.currentSong?.URI, globals.roomCode)
-                    // maybe a fix for nextSong to make sure a nextSong exists
-                    globals.getFromSQLServer()
-                    while (!globals.sqlDone) {
-                    }
-                    reConnect()
-                    globals.spotifyAppRemote?.playerApi?.play(globals.nextSong?.URI)
-
-                    globals.currentSong = globals.nextSong
-                    globals.nextSong = null
+                    // remove the next song from queue
                     globals.removeFromSQLServer(globals.currentSong?.URI, globals.roomCode)
 
-                    // download database and update nextSong
-                    globals.sqlDone = false
-                    globals.getFromSQLServer()
-                    while (!globals.sqlDone) {
-                    }
+
                 }
 
-
-                stallTime = track.duration - it.playbackPosition + 3000
+            } else {
+                globals.nextTimeChange = true
             }
-        delay(stallTime)
+
+        }
+
+        SpotifyAppRemote.disconnect(globals.spotifyAppRemote)
+        reConnect()
+        globals.numThreads--
     }
 
 

@@ -60,7 +60,7 @@ public class postToSQL :
                 preparedStmt.execute()
                 conn.close()
             } else {
-                Log.d("Deleteing", "Deleting " + URI + " " + usr)
+                //Log.d("Deleteing", "Deleting " + URI + " " + usr)
                 val query =
                     (" delete from Table1 where (URI='" + URI + "' and user='" + usr + "')")
 
@@ -73,7 +73,7 @@ public class postToSQL :
         } catch (e: java.lang.Exception) {
             Log.d("Got an exception!", e.message)
         }
-        Log.d("Leaving Post", "Leaving")
+        //Log.d("Leaving Post", "Leaving")
         return res
     }
 }

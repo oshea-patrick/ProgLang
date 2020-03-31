@@ -49,9 +49,9 @@ class songQueueActivity : AppCompatActivity() {
         reConnect()
 
         listView.adapter =
-            adapterForSongQueue(
-                this
-            )
+            adapterForSongQueue(this)
+        globals.queueListView = listView
+        globals.queueContext = this
     }
 
     private class adapterForSongQueue(context: Context): BaseAdapter() {
@@ -110,16 +110,18 @@ class songQueueActivity : AppCompatActivity() {
                 // assumes song is still there
                 globals.updateSQL(
                     "" + identifier.text,
-                    globals.roomCode,
+                    globals.currentRoom,
                     (1 + (votes.text as String).toInt())
                 )
                 // update queue
                 globals.sqlDone = false
-                globals.getFromSQLServer()
+                globals.getFromSQLServer(globals.currentRoom)
                 while (!globals.sqlDone) {
                 }
                 // redraw activity
                 positionTextView.text = "Votes: " + ("" + (numSongs.get(position) + 1))
+                globals.queueListView?.adapter =
+                    adapterForSongQueue(globals.queueContext!!)
             }
 
 

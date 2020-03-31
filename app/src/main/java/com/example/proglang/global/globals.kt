@@ -1,6 +1,10 @@
 package com.example.proglang.global
 
+import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.widget.ListView
 import com.adamratzman.spotify.SpotifyApi
 import com.example.proglang.SQL.getFromSQL
 import com.example.proglang.Songs.Queue
@@ -10,6 +14,8 @@ import com.spotify.android.appremote.api.SpotifyAppRemote
 import postToSQL
 
 object globals {
+
+    var firstTimeInMethod = true
 
     // refers to page
     var instantiated = false;
@@ -22,7 +28,7 @@ object globals {
 
 
     var songQueue : Queue? = Queue()
-    val api = SpotifyApi.spotifyAppApi(
+    var api = SpotifyApi.spotifyAppApi(
         ("f0593fe09a274cdb9ace5c6f31959336"),
         ("0f8ae7ff05574cad8a1f8ee4cc4e7cbd")
     ).build()
@@ -36,10 +42,16 @@ object globals {
         .showAuthView(true)
         .build()
     var roomCode = ""
+    var currentRoom = roomCode
     var get = getFromSQL()
     var post = postToSQL()
     var sqlDone = true
     var searchList = mutableListOf<Song>()
+    var queueListView: ListView? = null
+    var queueContext: Context? = null
+    val mainHandler = Handler(Looper.getMainLooper())
+    var numThreads = 0
+    var nextTimeChange = false
 
     fun postToSQLServer(uri : String, user : String, numVotes : Int) {
         try {
@@ -73,9 +85,9 @@ object globals {
         }
     }
 
-    fun getFromSQLServer() {
+    fun getFromSQLServer(code: String?) {
         try {
-            get.update(globals.roomCode)
+            get.update("" + code)
             get.execute("")
         } catch (e : Exception) {
             Log.d("Get Crashed", e.message)

@@ -1,7 +1,6 @@
 package com.example.proglang.SQL
 
 import android.os.AsyncTask
-import android.util.Log
 import com.example.proglang.Songs.Queue
 import com.example.proglang.Songs.Song
 import com.example.proglang.global.globals
@@ -43,7 +42,7 @@ public class getFromSQL :
             queue = Queue()
             Class.forName("com.mysql.jdbc.Driver")
             val con = DriverManager.getConnection(url, user, pass)
-            println("Databaseection success")
+            //println("Databaseection success")
             var result = "Database Connection Successful\n"
             val st = con.createStatement()
             val rs =
@@ -74,12 +73,18 @@ public class getFromSQL :
         }
         globals.songQueue = queue
         // DO logic for songInQueue and nextSong
-        if (!globals.nextSong?.URI.equals(queue?.peek()?.URI)) {
+        if (globals.currentSong == null) {
+            globals.currentSong = queue?.peek()
+            if (globals.songQueue?.size!! >= 2)
+                globals.nextSong = globals.songQueue?.queue?.get(1)
+            else
+                globals.nextSong = null
+        } else {
             globals.nextSong = queue?.peek()
         }
 
         globals.sqlDone = true
-        Log.d("Leaving get method", "Leaving")
+        //Log.d("Leaving get method", "Leaving")
         return ""
     }
 }

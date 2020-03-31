@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.adamratzman.spotify.endpoints.public.SearchApi
@@ -55,6 +56,7 @@ class song_search_view : AppCompatActivity() {
             )
 
         searchButton.setOnClickListener {
+            reConnect()
             var result = globals.api.search.search(
                 searchBar.text.toString(), SearchApi.SearchType.TRACK
             ).complete().tracks
@@ -68,7 +70,7 @@ class song_search_view : AppCompatActivity() {
                 for (x in 0..y) {
                     globals.searchList.add(
                         globals.searchList.size,
-                        Song(result.get(x).uri.uri, globals.roomCode, 1)
+                        Song(result.get(x).uri.uri, globals.currentRoom, 1)
                     )
                 }
             }
@@ -78,6 +80,38 @@ class song_search_view : AppCompatActivity() {
                     this
                 )
         }
+
+        searchBar?.setOnEditorActionListener { v, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                reConnect()
+                var result = globals.api.search.search(
+                    searchBar.text.toString(), SearchApi.SearchType.TRACK
+                ).complete().tracks
+
+                globals.searchList = mutableListOf<Song>()
+
+                if (result != null) {
+                    var y = result.size - 1
+                    if (y >= 10)
+                        y = 10
+                    for (x in 0..y) {
+                        globals.searchList.add(
+                            globals.searchList.size,
+                            Song(result.get(x).uri.uri, globals.currentRoom, 1)
+                        )
+                    }
+                }
+
+                listView.adapter =
+                    adapterForSearchView(
+                        this
+                    )
+                true
+            } else {
+                false
+            }
+        }
+
     }
 
 
@@ -115,7 +149,7 @@ class song_search_view : AppCompatActivity() {
 
 
             button.setOnClickListener {
-                globals.postToSQLServer(songs.get(position).URI, globals.roomCode, 1)
+                globals.postToSQLServer(songs.get(position).URI, globals.currentRoom, 1)
             }
 
             val nameTextView = row.findViewById<TextView>(R.id.TitleTextView)

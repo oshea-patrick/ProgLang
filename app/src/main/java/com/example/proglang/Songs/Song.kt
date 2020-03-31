@@ -6,6 +6,7 @@ class Song constructor(var URI : String, var user : String, var numVotes : Int){
 
     var name = ""
     var artist = ""
+    var length = 0
 
     var api = globals.api
 
@@ -22,6 +23,7 @@ class Song constructor(var URI : String, var user : String, var numVotes : Int){
             URI = globals.parseString(URI)
             name = api.tracks.getTrack(URI).complete()!!.name
             artist = api.tracks.getTrack(URI).complete()!!.artists[0].name.toString()
+            length = api.tracks.getTrack(URI).complete()!!.durationMs
         }
     }
 
